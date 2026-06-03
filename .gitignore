@@ -1,0 +1,31 @@
+# Backend
+backend/bin/
+backend/*.exe
+backend/*.test
+backend/*.out
+backend/coverage/
+
+# Frontend
+frontend/dist/
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/tsconfig.app.tsbuildinfo
+frontend/tsconfig.node.tsbuildinfo
+
+# Env
+.env
+.env.local
+backend/.env
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
