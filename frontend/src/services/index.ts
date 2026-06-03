@@ -1,4 +1,5 @@
 import api from './api'
+import type { Attendance, AttendanceSummaryItem, } from '../types'
 import type {
   AuthResponse,
   Class,
@@ -97,6 +98,26 @@ export const launchService = {
   update: (id: number, data: Partial<Launch>) =>
     api.put<{ launch: Launch }>(`/launches/${id}`, data).then((r) => r.data.launch),
   remove: (id: number) => api.delete(`/launches/${id}`).then((r) => r.data),
+}
+
+export const attendanceService = {
+  list: (classId: number, date?: string) =>
+    api
+      .get<PaginatedResponse<'attendance', Attendance>>(`/classes/${classId}/attendance`, {
+        params: { date },
+      })
+      .then((r) => r.data),
+  markBulk: (classId: number, date: string, records: { studentId: number; status: string; note?: string }[]) =>
+    api
+      .post<{ attendance: Attendance[]; date: string }>(`/classes/${classId}/attendance/bulk`, {
+        date,
+        records,
+      })
+      .then((r) => r.data),
+  summary: (classId: number) =>
+    api
+      .get<{ summary: AttendanceSummaryItem[]; total: number }>(`/classes/${classId}/attendance/summary`)
+      .then((r) => r.data),
 }
 
 export const classService = {

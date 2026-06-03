@@ -116,3 +116,28 @@ export type PaginatedResponse<K extends string, T> = {
 }
 
 export type Role = 'admin' | 'teacher' | 'student'
+
+export interface Attendance {
+  id: number
+  studentId: number
+  student?: Student
+  classId: number
+  class?: Class
+  date: string
+  status: 'present' | 'absent' | 'late' | 'excused'
+  note?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AttendanceSummaryItem {
+  studentId: number
+  studentCode: string
+  fullName: string
+  present: number
+  absent: number
+  late: number
+  excused: number
+  total: number
+  percentage: number
+}

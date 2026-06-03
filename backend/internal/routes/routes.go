@@ -25,6 +25,7 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 	courseHandler := handlers.NewCourseHandler()
 	classHandler := handlers.NewClassHandler()
 	launchHandler := handlers.NewLaunchHandler()
+	attendanceHandler := handlers.NewAttendanceHandler()
 
 	api := r.Group("/api")
 
@@ -61,6 +62,9 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 
 			readAll.GET("/launches", launchHandler.List)
 			readAll.GET("/launches/:id", launchHandler.Get)
+
+			readAll.GET("/classes/:id/attendance", attendanceHandler.List)
+			readAll.GET("/classes/:id/attendance/summary", attendanceHandler.Summary)
 		}
 
 		adminWrite := protected.Group("")
@@ -96,6 +100,7 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 			teacherOps.POST("/classes/:id/enroll", classHandler.Enroll)
 			teacherOps.PUT("/enrollments/:eid", classHandler.UpdateEnrollment)
 			teacherOps.DELETE("/enrollments/:eid", classHandler.DropEnrollment)
+			teacherOps.POST("/classes/:id/attendance/bulk", attendanceHandler.MarkBulk)
 		}
 	}
 

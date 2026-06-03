@@ -110,3 +110,16 @@ type Enrollment struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
+
+type Attendance struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	StudentID uint      `gorm:"not null;index:idx_attendance_student_class_date" json:"studentId"`
+	Student   Student   `gorm:"foreignKey:StudentID" json:"student"`
+	ClassID   uint      `gorm:"not null;index:idx_attendance_student_class_date" json:"classId"`
+	Class     Class     `gorm:"foreignKey:ClassID" json:"class"`
+	Date      time.Time `gorm:"not null;index:idx_attendance_student_class_date" json:"date"`
+	Status    string    `gorm:"size:16;not null;default:present" json:"status"`
+	Note      string    `gorm:"size:255" json:"note"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}

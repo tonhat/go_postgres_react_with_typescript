@@ -53,6 +53,7 @@ func Migrate() error {
 		&models.Course{},
 		&models.Class{},
 		&models.Enrollment{},
+		&models.Attendance{},
 	)
 }
 
