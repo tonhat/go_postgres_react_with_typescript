@@ -1,5 +1,6 @@
 # Backend
 backend/bin/
+backend/build/
 backend/*.exe
 backend/*.test
 backend/*.out
