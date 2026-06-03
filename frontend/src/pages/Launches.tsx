@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { launchService, transcriptService } from '../services'
+import { launchService, transcriptService, invoiceService } from '../services'
 import type { Launch, ClassReport } from '../types'
 import { useAuth } from '../context/AuthContext'
 import FormModal from '../components/FormModal'
@@ -28,6 +28,8 @@ export default function Launches() {
   const [error, setError] = useState('')
   const [finalizing, setFinalizing] = useState<number | null>(null)
   const [finalizeResult, setFinalizeResult] = useState<{ message: string; transcripts: number; avgGpa: number } | null>(null)
+  const [generatingInvoices, setGeneratingInvoices] = useState<number | null>(null)
+  const [invoiceResult, setInvoiceResult] = useState<{ message: string; created: number; skipped: number; total: number } | null>(null)
   const [report, setReport] = useState<ClassReport[] | null>(null)
   const [reportLaunch, setReportLaunch] = useState<string | null>(null)
   const [showReport, setShowReport] = useState(false)
@@ -115,6 +117,23 @@ export default function Launches() {
       })
     } finally {
       setFinalizing(null)
+    }
+  }
+
+  const onGenerateInvoices = async (id: number) => {
+    if (!isAdmin) return
+    setGeneratingInvoices(id)
+    setInvoiceResult(null)
+    try {
+      const res = await invoiceService.generate(id)
+      setInvoiceResult(res)
+    } catch (err: unknown) {
+      setInvoiceResult({
+        message: (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed',
+        created: 0, skipped: 0, total: 0,
+      })
+    } finally {
+      setGeneratingInvoices(null)
     }
   }
 
@@ -208,6 +227,13 @@ export default function Launches() {
                             disabled={finalizing === l.id}
                           >
                             {finalizing === l.id ? '...' : 'Finalize'}
+                          </button>
+                          <button
+                            className="btn btn-secondary text-xs"
+                            onClick={() => onGenerateInvoices(l.id)}
+                            disabled={generatingInvoices === l.id}
+                          >
+                            {generatingInvoices === l.id ? '...' : 'Invoices'}
                           </button>
                           <button
                             className="btn btn-danger text-xs"
@@ -311,6 +337,19 @@ export default function Launches() {
               </p>
             )}
             <button className="text-xs underline mt-1" onClick={() => setFinalizeResult(null)}>Dismiss</button>
+          </div>
+        </div>
+      )}
+
+      {invoiceResult && (
+        <div className="fixed bottom-4 right-4 z-50" style={{ bottom: '6rem' }}>
+          <div className={`rounded-lg shadow-lg p-4 text-sm max-w-sm ${invoiceResult.created > 0 ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
+            <p className="font-medium">{invoiceResult.created > 0 ? 'Invoices generated!' : 'Error'}</p>
+            <p>{invoiceResult.message}</p>
+            {invoiceResult.created > 0 && (
+              <p className="mt-1">{invoiceResult.created} created, {invoiceResult.skipped} skipped</p>
+            )}
+            <button className="text-xs underline mt-1" onClick={() => setInvoiceResult(null)}>Dismiss</button>
           </div>
         </div>
       )}

@@ -12,6 +12,9 @@ import Launches from './pages/Launches'
 import Users from './pages/Users'
 import GradeRules from './pages/GradeRules'
 import Transcripts from './pages/Transcripts'
+import FeeStructures from './pages/FeeStructures'
+import Invoices from './pages/Invoices'
+import Finance from './pages/Finance'
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth()
@@ -42,6 +45,9 @@ export default function App() {
         <Route path="launches" element={<Launches />} />
         <Route path="grade-rules" element={<GradeRules />} />
         <Route path="transcripts" element={<Transcripts />} />
+        <Route path="fee-structures" element={<FeeStructures />} />
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="finance" element={<Finance />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -149,3 +149,58 @@ type Attendance struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
+
+type FeeStructure struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Name        string    `gorm:"size:128;not null" json:"name"`
+	Description string    `gorm:"type:text" json:"description"`
+	Amount      float64   `gorm:"type:decimal(12,2);not null" json:"amount"`
+	LaunchID    *uint     `json:"launchId"`
+	Launch      *Launch   `gorm:"foreignKey:LaunchID" json:"launch"`
+	CourseID    *uint     `json:"courseId"`
+	Course      *Course   `gorm:"foreignKey:CourseID" json:"course"`
+	IsMandatory bool      `gorm:"default:true" json:"isMandatory"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+type Invoice struct {
+	ID          uint          `gorm:"primaryKey" json:"id"`
+	InvoiceNo   string        `gorm:"uniqueIndex;size:64;not null" json:"invoiceNo"`
+	StudentID   uint          `gorm:"not null;index" json:"studentId"`
+	Student     Student       `gorm:"foreignKey:StudentID" json:"student"`
+	LaunchID    uint          `gorm:"not null;index" json:"launchId"`
+	Launch      Launch        `gorm:"foreignKey:LaunchID" json:"launch"`
+	TotalAmount float64       `gorm:"type:decimal(12,2);default:0" json:"totalAmount"`
+	PaidAmount  float64       `gorm:"type:decimal(12,2);default:0" json:"paidAmount"`
+	Status      string        `gorm:"size:16;default:unpaid" json:"status"`
+	DueDate     time.Time     `json:"dueDate"`
+	IssuedAt    time.Time     `json:"issuedAt"`
+	PaidAt      *time.Time    `json:"paidAt"`
+	Items       []InvoiceItem `gorm:"foreignKey:InvoiceID" json:"items"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
+}
+
+type InvoiceItem struct {
+	ID             uint         `gorm:"primaryKey" json:"id"`
+	InvoiceID      uint         `gorm:"not null;index" json:"invoiceId"`
+	Invoice        *Invoice     `gorm:"foreignKey:InvoiceID" json:"-"`
+	FeeStructureID uint         `gorm:"not null" json:"feeStructureId"`
+	FeeStructure   *FeeStructure `gorm:"foreignKey:FeeStructureID" json:"feeStructure"`
+	Amount         float64      `gorm:"type:decimal(12,2);not null" json:"amount"`
+	CreatedAt      time.Time    `json:"createdAt"`
+}
+
+type Payment struct {
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	InvoiceID     uint      `gorm:"not null;index" json:"invoiceId"`
+	Invoice       *Invoice  `gorm:"foreignKey:InvoiceID" json:"invoice"`
+	Amount        float64   `gorm:"type:decimal(12,2);not null" json:"amount"`
+	PaymentMethod string    `gorm:"size:32;default:cash" json:"paymentMethod"`
+	ReferenceNo   string    `gorm:"size:128" json:"referenceNo"`
+	PaidAt        time.Time `json:"paidAt"`
+	Note          string    `gorm:"size:255" json:"note"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}

@@ -1,5 +1,5 @@
 import api from './api'
-import type { Attendance, AttendanceSummaryItem, GradeRule, Transcript, ClassReport, TranscriptSummary } from '../types'
+import type { Attendance, AttendanceSummaryItem, GradeRule, Transcript, ClassReport, TranscriptSummary, FeeStructure, Invoice, Payment, FinanceSummary } from '../types'
 import type {
   AuthResponse,
   Class,
@@ -155,6 +155,50 @@ export const transcriptService = {
     api.get<{ report: ClassReport[] }>(`/launches/${launchId}/report`).then((r) => r.data),
   summary: () =>
     api.get<{ summary: TranscriptSummary }>('/transcripts/summary').then((r) => r.data),
+}
+
+export const feeStructureService = {
+  list: (page = 1, limit = 20, launchId?: number) =>
+    api
+      .get<PaginatedResponse<'feeStructures', FeeStructure>>('/fee-structures', {
+        params: { page, limit, launchId },
+      })
+      .then((r) => r.data),
+  get: (id: number) =>
+    api.get<{ feeStructure: FeeStructure }>(`/fee-structures/${id}`).then((r) => r.data.feeStructure),
+  create: (data: Partial<FeeStructure>) =>
+    api.post<{ feeStructure: FeeStructure }>('/fee-structures', data).then((r) => r.data.feeStructure),
+  update: (id: number, data: Partial<FeeStructure>) =>
+    api.put<{ feeStructure: FeeStructure }>(`/fee-structures/${id}`, data).then((r) => r.data.feeStructure),
+  remove: (id: number) => api.delete(`/fee-structures/${id}`).then((r) => r.data),
+}
+
+export const invoiceService = {
+  list: (params?: { studentId?: number; launchId?: number; status?: string }, page = 1, limit = 20) =>
+    api
+      .get<PaginatedResponse<'invoices', Invoice>>('/invoices', {
+        params: { ...params, page, limit },
+      })
+      .then((r) => r.data),
+  get: (id: number) =>
+    api.get<{ invoice: Invoice }>(`/invoices/${id}`).then((r) => r.data.invoice),
+  studentInvoices: (studentId: number) =>
+    api.get<{ invoices: Invoice[] }>(`/students/${studentId}/invoices`).then((r) => r.data),
+  generate: (launchId: number) =>
+    api.post<{ message: string; created: number; skipped: number; total: number }>(
+      `/launches/${launchId}/generate-invoices`,
+    ).then((r) => r.data),
+  pay: (id: number, data: { amount: number; paymentMethod?: string; referenceNo?: string; note?: string; paidAt?: string }) =>
+    api.post<{ invoice: Invoice; payment: Payment }>(`/invoices/${id}/pay`, data).then((r) => r.data),
+  payments: (id: number) =>
+    api.get<{ payments: Payment[] }>(`/invoices/${id}/payments`).then((r) => r.data),
+}
+
+export const financeService = {
+  summary: () =>
+    api.get<{ summary: FinanceSummary }>('/finance/summary').then((r) => r.data),
+  launchSummary: (launchId: number) =>
+    api.get<{ summary: FinanceSummary }>(`/launches/${launchId}/finance`).then((r) => r.data),
 }
 
 export const classService = {

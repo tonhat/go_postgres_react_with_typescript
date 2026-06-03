@@ -56,6 +56,10 @@ func Migrate() error {
 		&models.Attendance{},
 		&models.GradeRule{},
 		&models.Transcript{},
+		&models.FeeStructure{},
+		&models.Invoice{},
+		&models.InvoiceItem{},
+		&models.Payment{},
 	)
 }
 

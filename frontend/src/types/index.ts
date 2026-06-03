@@ -174,6 +174,70 @@ export interface TranscriptSummary {
   overallGpa: number
 }
 
+export interface FeeStructure {
+  id: number
+  name: string
+  description?: string
+  amount: number
+  launchId?: number | null
+  launch?: Launch | null
+  courseId?: number | null
+  course?: Course | null
+  isMandatory: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface InvoiceItem {
+  id: number
+  invoiceId: number
+  feeStructureId: number
+  feeStructure?: FeeStructure
+  amount: number
+  createdAt: string
+}
+
+export interface Invoice {
+  id: number
+  invoiceNo: string
+  studentId: number
+  student?: Student
+  launchId: number
+  launch?: Launch
+  totalAmount: number
+  paidAmount: number
+  status: 'unpaid' | 'partial' | 'paid' | 'cancelled'
+  dueDate: string
+  issuedAt: string
+  paidAt?: string
+  items?: InvoiceItem[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Payment {
+  id: number
+  invoiceId: number
+  invoice?: Invoice
+  amount: number
+  paymentMethod: string
+  referenceNo?: string
+  paidAt: string
+  note?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface FinanceSummary {
+  totalInvoices: number
+  totalAmount: number
+  totalCollected: number
+  totalOutstanding: number
+  paidCount: number
+  unpaidCount: number
+  partialCount: number
+}
+
 export interface AttendanceSummaryItem {
   studentId: number
   studentCode: string

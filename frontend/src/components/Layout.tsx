@@ -11,6 +11,9 @@ const navItems = [
   { to: '/launches', label: 'Launches', icon: '🚀' },
   { to: '/grade-rules', label: 'Grade Rules', icon: '📋' },
   { to: '/transcripts', label: 'Transcripts', icon: '📜' },
+  { to: '/fee-structures', label: 'Fees', icon: '💰' },
+  { to: '/invoices', label: 'Invoices', icon: '🧾' },
+  { to: '/finance', label: 'Finance', icon: '📊' },
 ]
 
 export default function Layout() {
