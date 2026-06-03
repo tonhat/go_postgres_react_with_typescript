@@ -5,6 +5,9 @@ DB_PASSWORD ?= postgres
 DB_NAME ?= education_db
 SUDO ?= sudo
 
+# Use sudo for docker if the user is not in the docker group
+DOCKER := $(shell docker info >/dev/null 2>&1 && echo docker || echo $(SUDO) docker)
+
 help:
 	@echo "Makefile commands:"
 	@echo "  make db-up           - Stop local Postgres, then start Docker Postgres on :5432"
@@ -21,12 +24,12 @@ help:
 db-up:
 	@echo ">> Stopping local PostgreSQL service..."
 	@$(SUDO) systemctl stop postgresql || true
-	@echo ">> Starting Postgres via docker compose..."
-	docker compose up -d postgres
+	@echo ">> Starting Postgres via docker compose (using: $(DOCKER))..."
+	$(DOCKER) compose up -d postgres
 	@echo ">> Waiting for Postgres to be ready..."
-	@for i in 1 2 3 4 5 6 7 8 9 10; do \
-		if docker compose exec -T postgres pg_isready -U $(DB_USER) >/dev/null 2>&1; then \
-			echo ">> Postgres is ready."; \
+	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
+		if $(DOCKER) compose exec -T postgres pg_isready -U $(DB_USER) >/dev/null 2>&1; then \
+			echo ">> Postgres is ready on :5432"; \
 			break; \
 		fi; \
 		sleep 1; \
@@ -34,14 +37,14 @@ db-up:
 
 db-down:
 	@echo ">> Stopping docker Postgres..."
-	docker compose down
+	$(DOCKER) compose down
 	@echo ">> Starting local PostgreSQL service back..."
 	@$(SUDO) systemctl start postgresql || true
 	@echo ">> Done."
 
 db-status:
-	@echo "Local Postgres:    " ; (ss -tlnp 2>/dev/null | grep -q ':5432 ' && echo "running" || echo "stopped")
-	@echo "Docker container:  " ; (docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^edu_postgres$$' && echo "running" || echo "stopped")
+	@echo -n "Local Postgres:    "; (ss -tlnp 2>/dev/null | grep -q ':5432 ' && echo "running" || echo "stopped")
+	@echo -n "Docker container:  "; ($($(DOCKER) --version >/dev/null 2>&1 && $(DOCKER) ps --format '{{.Names}}' 2>/dev/null | grep -q '^edu_postgres$$' && echo running) || echo stopped)
 
 db-create:
 	PGPASSWORD=$(DB_PASSWORD) psql -h localhost -U $(DB_USER) -tc "SELECT 1 FROM pg_database WHERE datname = '$(DB_NAME)'" | grep -q 1 || \
@@ -64,4 +67,5 @@ frontend-build:
 
 clean:
 	rm -rf backend/bin frontend/dist
+
 
