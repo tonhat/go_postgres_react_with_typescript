@@ -31,6 +31,7 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 	feeStructureHandler := handlers.NewFeeStructureHandler()
 	invoiceHandler := handlers.NewInvoiceHandler()
 	financeHandler := handlers.NewFinanceHandler()
+	seedHandler := handlers.NewSeedHandler()
 
 	api := r.Group("/api")
 
@@ -130,6 +131,8 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 
 			adminWrite.POST("/launches/:id/generate-invoices", invoiceHandler.Generate)
 			adminWrite.POST("/invoices/:id/pay", invoiceHandler.Pay)
+
+			adminWrite.POST("/seed/demo", seedHandler.Demo)
 		}
 
 		teacherOps := protected.Group("")
