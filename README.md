@@ -41,7 +41,8 @@ go_postgres_react_with_typescript/
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── tailwind.config.js
-├── docker-compose.yml          # Postgres service
+├── docker-compose.yml          # Optional: Postgres via Docker (alternative)
+├── start.sh                    # One-command startup script
 ├── Makefile
 └── README.md
 ```
@@ -54,24 +55,34 @@ go_postgres_react_with_typescript/
 
 ## Quick Start
 
-### 1. Start PostgreSQL
+### One-command start
 
 ```bash
-make db-up
-# or: docker compose up -d postgres
+./start.sh
 ```
 
-Make sure Postgres is reachable at `localhost:5432` with user `postgres` / password `postgres`.
+This will:
+- Start the local PostgreSQL service (prompts for `sudo`)
+- Create the `education_db` database and `postgres` role if missing
+- Start the Go backend on `:8080`
 
-### 2. Configure backend
+### Step by step
+
+**1. Start PostgreSQL & create database**
+
+```bash
+sudo systemctl start postgresql
+make db-create     # creates education_db and postgres role
+```
+
+**2. Configure backend**
 
 ```bash
 cd backend
 cp .env.example .env
-# edit .env if needed
 ```
 
-### 3. Run backend
+**3. Run backend**
 
 ```bash
 make backend-run
@@ -83,7 +94,7 @@ The API will start at `http://localhost:8080` and:
 - seed a default admin user and one launch
 - print: `Default admin: admin@education.com / admin123`
 
-### 4. Run frontend
+**4. Run frontend**
 
 ```bash
 cd frontend
@@ -93,12 +104,14 @@ npm run dev
 
 The UI will be at `http://localhost:5173` and proxies `/api` requests to the backend.
 
-### 5. Sign in
+**5. Sign in**
 
 Open `http://localhost:5173` and use the default admin:
 
 - Email: `admin@education.com`
 - Password: `admin123`
+
+> If you prefer Docker over the local PostgreSQL, run `docker compose up -d postgres` instead of step 1.
 
 ## API Endpoints
 

@@ -1,60 +1,51 @@
-.PHONY: help db-up db-down db-status backend backend-run frontend frontend-install frontend-build seed clean
+.PHONY: help db-up db-down db-create backend backend-run frontend-install frontend-dev frontend-build clean start
 
 DB_USER ?= postgres
 DB_PASSWORD ?= postgres
 DB_NAME ?= education_db
-SUDO ?= sudo
-
-# Use sudo for docker if the user is not in the docker group
-DOCKER := $(shell docker info >/dev/null 2>&1 && echo docker || echo $(SUDO) docker)
 
 help:
 	@echo "Makefile commands:"
-	@echo "  make db-up           - Stop local Postgres, then start Docker Postgres on :5432"
-	@echo "  make db-down         - Stop Docker Postgres, then start local Postgres back"
-	@echo "  make db-status       - Show which Postgres is currently running"
-	@echo "  make db-create       - Create database if not exists"
-	@echo "  make backend         - Build Go backend"
-	@echo "  make backend-run     - Run Go backend"
-	@echo "  make frontend-install- Install npm dependencies"
-	@echo "  make frontend-dev    - Run frontend dev server"
-	@echo "  make frontend-build  - Build frontend for production"
-	@echo "  make clean           - Clean build artifacts"
+	@echo "  make start          - Start local Postgres, create DB, run backend (interactive, needs sudo)"
+	@echo "  make db-up          - Start local PostgreSQL service"
+	@echo "  make db-down        - Stop local PostgreSQL service"
+	@echo "  make db-create      - Create the education_db database"
+	@echo "  make backend        - Build Go backend"
+	@echo "  make backend-run    - Run Go backend"
+	@echo "  make frontend-install - Install npm dependencies"
+	@echo "  make frontend-dev   - Run frontend dev server"
+	@echo "  make frontend-build - Build frontend for production"
+	@echo "  make clean          - Clean build artifacts"
+
+start: db-up db-create backend-run
 
 db-up:
-	@echo ">> Stopping local PostgreSQL service..."
-	@$(SUDO) systemctl stop postgresql || true
-	@echo ">> Starting Postgres via docker compose (using: $(DOCKER))..."
-	$(DOCKER) compose up -d postgres
-	@echo ">> Waiting for Postgres to be ready..."
-	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
-		if $(DOCKER) compose exec -T postgres pg_isready -U $(DB_USER) >/dev/null 2>&1; then \
-			echo ">> Postgres is ready on :5432"; \
-			break; \
-		fi; \
+	@echo ">> Starting local PostgreSQL..."
+	@sudo systemctl start postgresql 2>/dev/null || echo "    PostgreSQL already running or needs your password"
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if pg_isready -q 2>/dev/null; then echo "    Postgres is ready."; break; fi; \
 		sleep 1; \
 	done
 
 db-down:
-	@echo ">> Stopping docker Postgres..."
-	$(DOCKER) compose down
-	@echo ">> Starting local PostgreSQL service back..."
-	@$(SUDO) systemctl start postgresql || true
-	@echo ">> Done."
-
-db-status:
-	@echo -n "Local Postgres:    "; (ss -tlnp 2>/dev/null | grep -q ':5432 ' && echo "running" || echo "stopped")
-	@echo -n "Docker container:  "; ($($(DOCKER) --version >/dev/null 2>&1 && $(DOCKER) ps --format '{{.Names}}' 2>/dev/null | grep -q '^edu_postgres$$' && echo running) || echo stopped)
+	@echo ">> Stopping local PostgreSQL..."
+	@sudo systemctl stop postgresql
 
 db-create:
-	PGPASSWORD=$(DB_PASSWORD) psql -h localhost -U $(DB_USER) -tc "SELECT 1 FROM pg_database WHERE datname = '$(DB_NAME)'" | grep -q 1 || \
-	PGPASSWORD=$(DB_PASSWORD) psql -h localhost -U $(DB_USER) -c "CREATE DATABASE $(DB_NAME)"
+	@echo ">> Creating database $(DB_NAME)..."
+	@sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '$(DB_NAME)'" | grep -q 1 && \
+		echo "    Database already exists." || \
+		(sudo -u postgres createdb "$(DB_NAME)" && echo "    Done.")
+	@sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '$(DB_USER)'" | grep -q 1 && \
+		echo "    Role $(DB_USER) already exists." || \
+		(sudo -u postgres psql -c "CREATE ROLE $(DB_USER) LOGIN SUPERUSER PASSWORD '$(DB_PASSWORD)';" && \
+		 echo "    Role $(DB_USER) created.")
 
 backend:
 	cd backend && go build -o bin/server ./cmd/server
 
 backend-run:
-	cd backend && go run ./cmd/server
+	cd backend && cp -n .env.example .env 2>/dev/null || true && go run ./cmd/server
 
 frontend-install:
 	cd frontend && npm install
@@ -67,5 +58,3 @@ frontend-build:
 
 clean:
 	rm -rf backend/bin frontend/dist
-
-
