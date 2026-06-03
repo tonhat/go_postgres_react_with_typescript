@@ -39,42 +39,64 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 	protected.Use(middleware.Auth(cfg))
 	{
 		protected.GET("/auth/me", authHandler.Me)
-		protected.GET("/users", userHandler.List)
-		protected.GET("/users/:id", userHandler.Get)
-		protected.PUT("/users/:id", userHandler.Update)
-		protected.DELETE("/users/:id", userHandler.Delete)
 
-		protected.GET("/students", studentHandler.List)
-		protected.GET("/students/:id", studentHandler.Get)
-		protected.POST("/students", studentHandler.Create)
-		protected.PUT("/students/:id", studentHandler.Update)
-		protected.DELETE("/students/:id", studentHandler.Delete)
+		readAll := protected.Group("")
+		readAll.Use(middleware.RequireRole("admin", "teacher", "student"))
+		{
+			readAll.GET("/users", userHandler.List)
+			readAll.GET("/users/:id", userHandler.Get)
 
-		protected.GET("/teachers", teacherHandler.List)
-		protected.GET("/teachers/:id", teacherHandler.Get)
-		protected.POST("/teachers", teacherHandler.Create)
-		protected.PUT("/teachers/:id", teacherHandler.Update)
-		protected.DELETE("/teachers/:id", teacherHandler.Delete)
+			readAll.GET("/students", studentHandler.List)
+			readAll.GET("/students/:id", studentHandler.Get)
 
-		protected.GET("/courses", courseHandler.List)
-		protected.GET("/courses/:id", courseHandler.Get)
-		protected.POST("/courses", courseHandler.Create)
-		protected.PUT("/courses/:id", courseHandler.Update)
-		protected.DELETE("/courses/:id", courseHandler.Delete)
+			readAll.GET("/teachers", teacherHandler.List)
+			readAll.GET("/teachers/:id", teacherHandler.Get)
 
-		protected.GET("/classes", classHandler.List)
-		protected.GET("/classes/:id", classHandler.Get)
-		protected.POST("/classes", classHandler.Create)
-		protected.PUT("/classes/:id", classHandler.Update)
-		protected.DELETE("/classes/:id", classHandler.Delete)
-		protected.POST("/classes/:id/enroll", classHandler.Enroll)
-		protected.GET("/classes/:id/enrollments", classHandler.ListEnrollments)
+			readAll.GET("/courses", courseHandler.List)
+			readAll.GET("/courses/:id", courseHandler.Get)
 
-		protected.GET("/launches", launchHandler.List)
-		protected.GET("/launches/:id", launchHandler.Get)
-		protected.POST("/launches", launchHandler.Create)
-		protected.PUT("/launches/:id", launchHandler.Update)
-		protected.DELETE("/launches/:id", launchHandler.Delete)
+			readAll.GET("/classes", classHandler.List)
+			readAll.GET("/classes/:id", classHandler.Get)
+			readAll.GET("/classes/:id/enrollments", classHandler.ListEnrollments)
+
+			readAll.GET("/launches", launchHandler.List)
+			readAll.GET("/launches/:id", launchHandler.Get)
+		}
+
+		adminWrite := protected.Group("")
+		adminWrite.Use(middleware.RequireRole("admin"))
+		{
+			adminWrite.PUT("/users/:id", userHandler.Update)
+			adminWrite.DELETE("/users/:id", userHandler.Delete)
+
+			adminWrite.POST("/students", studentHandler.Create)
+			adminWrite.PUT("/students/:id", studentHandler.Update)
+			adminWrite.DELETE("/students/:id", studentHandler.Delete)
+
+			adminWrite.POST("/teachers", teacherHandler.Create)
+			adminWrite.PUT("/teachers/:id", teacherHandler.Update)
+			adminWrite.DELETE("/teachers/:id", teacherHandler.Delete)
+
+			adminWrite.POST("/courses", courseHandler.Create)
+			adminWrite.PUT("/courses/:id", courseHandler.Update)
+			adminWrite.DELETE("/courses/:id", courseHandler.Delete)
+
+			adminWrite.POST("/classes", classHandler.Create)
+			adminWrite.PUT("/classes/:id", classHandler.Update)
+			adminWrite.DELETE("/classes/:id", classHandler.Delete)
+
+			adminWrite.POST("/launches", launchHandler.Create)
+			adminWrite.PUT("/launches/:id", launchHandler.Update)
+			adminWrite.DELETE("/launches/:id", launchHandler.Delete)
+		}
+
+		teacherOps := protected.Group("")
+		teacherOps.Use(middleware.RequireRole("admin", "teacher"))
+		{
+			teacherOps.POST("/classes/:id/enroll", classHandler.Enroll)
+			teacherOps.PUT("/enrollments/:eid", classHandler.UpdateEnrollment)
+			teacherOps.DELETE("/enrollments/:eid", classHandler.DropEnrollment)
+		}
 	}
 
 	return r

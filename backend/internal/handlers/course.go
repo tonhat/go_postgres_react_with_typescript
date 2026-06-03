@@ -24,11 +24,16 @@ func (h *CourseHandler) List(c *gin.Context) {
 	if dept := c.Query("department"); dept != "" {
 		query = query.Where("department = ?", dept)
 	}
-	if err := query.Find(&courses).Error; err != nil {
+
+	var total int64
+	query.Model(&models.Course{}).Count(&total)
+
+	p := paginate(c)
+	if err := query.Offset(p.Skip).Limit(p.Limit).Find(&courses).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch courses"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"courses": courses, "total": len(courses)})
+	c.JSON(http.StatusOK, gin.H{"courses": courses, "total": total, "page": p.Page, "limit": p.Limit})
 }
 
 func (h *CourseHandler) Get(c *gin.Context) {

@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { teacherService } from '../services'
 import type { Teacher } from '../types'
+import { useAuth } from '../context/AuthContext'
 import FormModal from '../components/FormModal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import Pagination from '../components/Pagination'
 
 const empty = {
   email: '',
@@ -13,25 +15,31 @@ const empty = {
   department: '',
   title: '',
   specialty: '',
-  gender: 'male',
+  gender: 'male' as string,
   salary: 0,
 }
 
 export default function Teachers() {
+  const { user: currentUser } = useAuth()
   const [items, setItems] = useState<Teacher[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Teacher | null>(null)
   const [form, setForm] = useState(empty)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [error, setError] = useState('')
+  const isAdmin = currentUser?.role === 'admin'
 
-  const load = async (q = '') => {
+  const load = async (q = search, p = page) => {
     setLoading(true)
     try {
-      const data = await teacherService.list(q)
+      const data = await teacherService.list(q, p)
       setItems(data.teachers)
+      setTotal(data.total)
+      setPage(data.page)
     } catch {
       setItems([])
     }
@@ -40,9 +48,16 @@ export default function Teachers() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [page])
+
+  const onSearch = (q: string) => {
+    setSearch(q)
+    setPage(1)
+    load(q, 1)
+  }
 
   const onCreate = () => {
+    if (!isAdmin) return
     setEditing(null)
     setForm(empty)
     setError('')
@@ -50,6 +65,7 @@ export default function Teachers() {
   }
 
   const onEdit = (t: Teacher) => {
+    if (!isAdmin) return
     setEditing(t)
     setForm({
       email: t.user?.email || '',
@@ -86,7 +102,7 @@ export default function Teachers() {
         await teacherService.create({ ...form, salary: Number(form.salary) })
       }
       setOpen(false)
-      load(search)
+      load(search, page)
     } catch (err: unknown) {
       setError(
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
@@ -96,11 +112,11 @@ export default function Teachers() {
   }
 
   const onDelete = async () => {
-    if (!confirmId) return
+    if (!confirmId || !isAdmin) return
     try {
       await teacherService.remove(confirmId)
       setConfirmId(null)
-      load(search)
+      load(search, page)
     } catch {
       setConfirmId(null)
     }
@@ -110,9 +126,11 @@ export default function Teachers() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Teachers</h1>
-        <button className="btn btn-primary" onClick={onCreate}>
-          + Add Teacher
-        </button>
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={onCreate}>
+            + Add Teacher
+          </button>
+        )}
       </div>
 
       <div className="card p-4 mb-4">
@@ -120,10 +138,7 @@ export default function Teachers() {
           className="input max-w-md"
           placeholder="Search by name, email, or code..."
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value)
-            load(e.target.value)
-          }}
+          onChange={(e) => onSearch(e.target.value)}
         />
       </div>
 
@@ -137,19 +152,19 @@ export default function Teachers() {
               <th>Department</th>
               <th>Title</th>
               <th>Specialty</th>
-              <th></th>
+              {isAdmin && <th></th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="text-center text-gray-500 py-6">
+                <td colSpan={isAdmin ? 7 : 6} className="text-center text-gray-500 py-6">
                   Loading...
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center text-gray-500 py-6">
+                <td colSpan={isAdmin ? 7 : 6} className="text-center text-gray-500 py-6">
                   No teachers found
                 </td>
               </tr>
@@ -162,24 +177,27 @@ export default function Teachers() {
                   <td>{t.department || '-'}</td>
                   <td>{t.title || '-'}</td>
                   <td>{t.specialty || '-'}</td>
-                  <td>
-                    <div className="flex gap-2">
-                      <button className="btn btn-secondary text-xs" onClick={() => onEdit(t)}>
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-danger text-xs"
-                        onClick={() => setConfirmId(t.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+                  {isAdmin && (
+                    <td>
+                      <div className="flex gap-2">
+                        <button className="btn btn-secondary text-xs" onClick={() => onEdit(t)}>
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-danger text-xs"
+                          onClick={() => setConfirmId(t.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
           </tbody>
         </table>
+        <Pagination page={page} limit={20} total={total} onPageChange={setPage} />
       </div>
 
       <FormModal

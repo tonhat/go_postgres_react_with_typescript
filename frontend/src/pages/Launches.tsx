@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { launchService } from '../services'
 import type { Launch } from '../types'
+import { useAuth } from '../context/AuthContext'
 import FormModal from '../components/FormModal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import Pagination from '../components/Pagination'
 
 const empty = {
   name: '',
@@ -14,19 +16,25 @@ const empty = {
 }
 
 export default function Launches() {
+  const { user: currentUser } = useAuth()
   const [items, setItems] = useState<Launch[]>([])
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Launch | null>(null)
   const [form, setForm] = useState(empty)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [error, setError] = useState('')
+  const isAdmin = currentUser?.role === 'admin'
 
-  const load = async () => {
+  const load = async (p = page) => {
     setLoading(true)
     try {
-      const data = await launchService.list()
+      const data = await launchService.list(p)
       setItems(data.launches)
+      setTotal(data.total)
+      setPage(data.page)
     } catch {
       setItems([])
     }
@@ -35,9 +43,10 @@ export default function Launches() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [page])
 
   const onCreate = () => {
+    if (!isAdmin) return
     setEditing(null)
     setForm(empty)
     setError('')
@@ -45,6 +54,7 @@ export default function Launches() {
   }
 
   const onEdit = (l: Launch) => {
+    if (!isAdmin) return
     setEditing(l)
     setForm({
       name: l.name,
@@ -73,7 +83,7 @@ export default function Launches() {
         await launchService.create(payload)
       }
       setOpen(false)
-      load()
+      load(page)
     } catch (err: unknown) {
       setError(
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
@@ -83,11 +93,11 @@ export default function Launches() {
   }
 
   const onDelete = async () => {
-    if (!confirmId) return
+    if (!confirmId || !isAdmin) return
     try {
       await launchService.remove(confirmId)
       setConfirmId(null)
-      load()
+      load(page)
     } catch {
       setConfirmId(null)
     }
@@ -97,9 +107,11 @@ export default function Launches() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Launches (Semesters)</h1>
-        <button className="btn btn-primary" onClick={onCreate}>
-          + Add Launch
-        </button>
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={onCreate}>
+            + Add Launch
+          </button>
+        )}
       </div>
 
       <div className="card overflow-x-auto">
@@ -111,19 +123,19 @@ export default function Launches() {
               <th>Start</th>
               <th>End</th>
               <th>Status</th>
-              <th></th>
+              {isAdmin && <th></th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="text-center text-gray-500 py-6">
+                <td colSpan={isAdmin ? 6 : 5} className="text-center text-gray-500 py-6">
                   Loading...
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center text-gray-500 py-6">
+                <td colSpan={isAdmin ? 6 : 5} className="text-center text-gray-500 py-6">
                   No launches found
                 </td>
               </tr>
@@ -141,24 +153,27 @@ export default function Launches() {
                       <span className="badge badge-yellow">Inactive</span>
                     )}
                   </td>
-                  <td>
-                    <div className="flex gap-2">
-                      <button className="btn btn-secondary text-xs" onClick={() => onEdit(l)}>
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-danger text-xs"
-                        onClick={() => setConfirmId(l.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+                  {isAdmin && (
+                    <td>
+                      <div className="flex gap-2">
+                        <button className="btn btn-secondary text-xs" onClick={() => onEdit(l)}>
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-danger text-xs"
+                          onClick={() => setConfirmId(l.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
           </tbody>
         </table>
+        <Pagination page={page} limit={20} total={total} onPageChange={setPage} />
       </div>
 
       <FormModal

@@ -18,11 +18,17 @@ func NewLaunchHandler() *LaunchHandler {
 
 func (h *LaunchHandler) List(c *gin.Context) {
 	var launches []models.Launch
-	if err := database.DB.Order("start_date desc").Find(&launches).Error; err != nil {
+	query := database.DB.Order("start_date desc")
+
+	var total int64
+	query.Model(&models.Launch{}).Count(&total)
+
+	p := paginate(c)
+	if err := query.Offset(p.Skip).Limit(p.Limit).Find(&launches).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch launches"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"launches": launches, "total": len(launches)})
+	c.JSON(http.StatusOK, gin.H{"launches": launches, "total": total, "page": p.Page, "limit": p.Limit})
 }
 
 func (h *LaunchHandler) Get(c *gin.Context) {

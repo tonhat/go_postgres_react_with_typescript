@@ -25,11 +25,16 @@ func (h *StudentHandler) List(c *gin.Context) {
 			Where("users.full_name ILIKE ? OR users.email ILIKE ? OR students.student_code ILIKE ?",
 				"%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
-	if err := query.Find(&students).Error; err != nil {
+
+	var total int64
+	query.Model(&models.Student{}).Count(&total)
+
+	p := paginate(c)
+	if err := query.Offset(p.Skip).Limit(p.Limit).Find(&students).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch students"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"students": students, "total": len(students)})
+	c.JSON(http.StatusOK, gin.H{"students": students, "total": total, "page": p.Page, "limit": p.Limit})
 }
 
 func (h *StudentHandler) Get(c *gin.Context) {

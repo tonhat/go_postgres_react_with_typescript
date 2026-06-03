@@ -28,7 +28,12 @@ func (h *ClassHandler) List(c *gin.Context) {
 	if teacherID := c.Query("teacherId"); teacherID != "" {
 		query = query.Where("teacher_id = ?", teacherID)
 	}
-	if err := query.Find(&classes).Error; err != nil {
+
+	var total int64
+	query.Model(&models.Class{}).Count(&total)
+
+	p := paginate(c)
+	if err := query.Offset(p.Skip).Limit(p.Limit).Find(&classes).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch classes"})
 		return
 	}
@@ -43,7 +48,7 @@ func (h *ClassHandler) List(c *gin.Context) {
 		database.DB.Model(&models.Enrollment{}).Where("class_id = ? AND status = ?", cl.ID, "enrolled").Count(&cnt)
 		results = append(results, classWithCount{Class: cl, EnrolledCount: cnt})
 	}
-	c.JSON(http.StatusOK, gin.H{"classes": results, "total": len(results)})
+	c.JSON(http.StatusOK, gin.H{"classes": results, "total": total, "page": p.Page, "limit": p.Limit})
 }
 
 func (h *ClassHandler) Get(c *gin.Context) {
@@ -174,9 +179,67 @@ func (h *ClassHandler) Enroll(c *gin.Context) {
 func (h *ClassHandler) ListEnrollments(c *gin.Context) {
 	classID := c.Param("id")
 	var enrollments []models.Enrollment
-	if err := database.DB.Preload("Student.User").Where("class_id = ?", classID).Find(&enrollments).Error; err != nil {
+	query := database.DB.Preload("Student.User").Where("class_id = ?", classID)
+
+	var total int64
+	query.Model(&models.Enrollment{}).Count(&total)
+
+	p := paginate(c)
+	if err := query.Offset(p.Skip).Limit(p.Limit).Find(&enrollments).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch enrollments"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"enrollments": enrollments, "total": len(enrollments)})
+	c.JSON(http.StatusOK, gin.H{"enrollments": enrollments, "total": total, "page": p.Page, "limit": p.Limit})
+}
+
+type UpdateEnrollmentRequest struct {
+	Score float64 `json:"score"`
+}
+
+func (h *ClassHandler) UpdateEnrollment(c *gin.Context) {
+	id := c.Param("eid")
+	var enrollment models.Enrollment
+	if err := database.DB.Preload("Class").First(&enrollment, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Enrollment not found"})
+		return
+	}
+
+	var req UpdateEnrollmentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	grade, _ := computeGrade(req.Score)
+	updates := map[string]interface{}{
+		"score": req.Score,
+		"grade": grade,
+	}
+	if req.Score >= 60 {
+		updates["status"] = "passed"
+	} else {
+		updates["status"] = "failed"
+	}
+
+	if err := database.DB.Model(&enrollment).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update enrollment"})
+		return
+	}
+
+	database.DB.Preload("Student.User").First(&enrollment, id)
+	c.JSON(http.StatusOK, gin.H{"enrollment": enrollment})
+}
+
+func (h *ClassHandler) DropEnrollment(c *gin.Context) {
+	eid := c.Param("eid")
+	var enrollment models.Enrollment
+	if err := database.DB.First(&enrollment, eid).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Enrollment not found"})
+		return
+	}
+	if err := database.DB.Delete(&enrollment).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to drop enrollment"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Enrollment dropped"})
 }

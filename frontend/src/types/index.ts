@@ -106,3 +106,13 @@ export interface AuthResponse {
   token: string
   user: User
 }
+
+export type PaginatedResponse<K extends string, T> = {
+  [P in K]: T[]
+} & {
+  total: number
+  page: number
+  limit: number
+}
+
+export type Role = 'admin' | 'teacher' | 'student'

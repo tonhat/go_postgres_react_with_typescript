@@ -25,11 +25,16 @@ func (h *TeacherHandler) List(c *gin.Context) {
 			Where("users.full_name ILIKE ? OR users.email ILIKE ? OR teachers.teacher_code ILIKE ?",
 				"%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
-	if err := query.Find(&teachers).Error; err != nil {
+
+	var total int64
+	query.Model(&models.Teacher{}).Count(&total)
+
+	p := paginate(c)
+	if err := query.Offset(p.Skip).Limit(p.Limit).Find(&teachers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch teachers"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"teachers": teachers, "total": len(teachers)})
+	c.JSON(http.StatusOK, gin.H{"teachers": teachers, "total": total, "page": p.Page, "limit": p.Limit})
 }
 
 func (h *TeacherHandler) Get(c *gin.Context) {

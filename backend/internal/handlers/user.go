@@ -17,11 +17,17 @@ func NewUserHandler() *UserHandler {
 
 func (h *UserHandler) List(c *gin.Context) {
 	var users []models.User
-	if err := database.DB.Order("created_at desc").Find(&users).Error; err != nil {
+	query := database.DB.Order("created_at desc")
+
+	var total int64
+	query.Model(&models.User{}).Count(&total)
+
+	p := paginate(c)
+	if err := query.Offset(p.Skip).Limit(p.Limit).Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"users": users, "total": len(users)})
+	c.JSON(http.StatusOK, gin.H{"users": users, "total": total, "page": p.Page, "limit": p.Limit})
 }
 
 func (h *UserHandler) Get(c *gin.Context) {

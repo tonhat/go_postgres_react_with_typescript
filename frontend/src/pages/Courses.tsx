@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { courseService } from '../services'
 import type { Course } from '../types'
+import { useAuth } from '../context/AuthContext'
 import FormModal from '../components/FormModal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import Pagination from '../components/Pagination'
 
 const empty = {
   name: '',
@@ -15,20 +17,26 @@ const empty = {
 }
 
 export default function Courses() {
+  const { user: currentUser } = useAuth()
   const [items, setItems] = useState<Course[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Course | null>(null)
   const [form, setForm] = useState(empty)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [error, setError] = useState('')
+  const isAdmin = currentUser?.role === 'admin'
 
-  const load = async (q = '') => {
+  const load = async (q = search, p = page) => {
     setLoading(true)
     try {
-      const data = await courseService.list(q)
+      const data = await courseService.list(q, undefined, p)
       setItems(data.courses)
+      setTotal(data.total)
+      setPage(data.page)
     } catch {
       setItems([])
     }
@@ -37,9 +45,16 @@ export default function Courses() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [page])
+
+  const onSearch = (q: string) => {
+    setSearch(q)
+    setPage(1)
+    load(q, 1)
+  }
 
   const onCreate = () => {
+    if (!isAdmin) return
     setEditing(null)
     setForm(empty)
     setError('')
@@ -47,6 +62,7 @@ export default function Courses() {
   }
 
   const onEdit = (c: Course) => {
+    if (!isAdmin) return
     setEditing(c)
     setForm({
       name: c.name,
@@ -72,7 +88,7 @@ export default function Courses() {
         await courseService.create(payload)
       }
       setOpen(false)
-      load(search)
+      load(search, page)
     } catch (err: unknown) {
       setError(
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
@@ -82,11 +98,11 @@ export default function Courses() {
   }
 
   const onDelete = async () => {
-    if (!confirmId) return
+    if (!confirmId || !isAdmin) return
     try {
       await courseService.remove(confirmId)
       setConfirmId(null)
-      load(search)
+      load(search, page)
     } catch {
       setConfirmId(null)
     }
@@ -96,9 +112,11 @@ export default function Courses() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Courses</h1>
-        <button className="btn btn-primary" onClick={onCreate}>
-          + Add Course
-        </button>
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={onCreate}>
+            + Add Course
+          </button>
+        )}
       </div>
 
       <div className="card p-4 mb-4">
@@ -106,10 +124,7 @@ export default function Courses() {
           className="input max-w-md"
           placeholder="Search by name or code..."
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value)
-            load(e.target.value)
-          }}
+          onChange={(e) => onSearch(e.target.value)}
         />
       </div>
 
@@ -123,19 +138,19 @@ export default function Courses() {
               <th>Credit</th>
               <th>Hours</th>
               <th>Status</th>
-              <th></th>
+              {isAdmin && <th></th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="text-center text-gray-500 py-6">
+                <td colSpan={isAdmin ? 7 : 6} className="text-center text-gray-500 py-6">
                   Loading...
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center text-gray-500 py-6">
+                <td colSpan={isAdmin ? 7 : 6} className="text-center text-gray-500 py-6">
                   No courses found
                 </td>
               </tr>
@@ -154,24 +169,27 @@ export default function Courses() {
                       <span className="badge badge-red">Inactive</span>
                     )}
                   </td>
-                  <td>
-                    <div className="flex gap-2">
-                      <button className="btn btn-secondary text-xs" onClick={() => onEdit(c)}>
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-danger text-xs"
-                        onClick={() => setConfirmId(c.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+                  {isAdmin && (
+                    <td>
+                      <div className="flex gap-2">
+                        <button className="btn btn-secondary text-xs" onClick={() => onEdit(c)}>
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-danger text-xs"
+                          onClick={() => setConfirmId(c.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
           </tbody>
         </table>
+        <Pagination page={page} limit={20} total={total} onPageChange={setPage} />
       </div>
 
       <FormModal

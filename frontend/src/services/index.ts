@@ -5,6 +5,7 @@ import type {
   Course,
   Enrollment,
   Launch,
+  PaginatedResponse,
   Student,
   Teacher,
   User,
@@ -26,7 +27,10 @@ export const authService = {
 }
 
 export const userService = {
-  list: () => api.get<{ users: User[]; total: number }>('/users').then((r) => r.data),
+  list: (page = 1, limit = 20) =>
+    api
+      .get<PaginatedResponse<'users', User>>('/users', { params: { page, limit } })
+      .then((r) => r.data),
   get: (id: number) => api.get<{ user: User }>(`/users/${id}`).then((r) => r.data.user),
   update: (id: number, data: Partial<User>) =>
     api.put<{ user: User }>(`/users/${id}`, data).then((r) => r.data.user),
@@ -34,9 +38,11 @@ export const userService = {
 }
 
 export const studentService = {
-  list: (search?: string) =>
+  list: (search?: string, page = 1, limit = 20) =>
     api
-      .get<{ students: Student[]; total: number }>('/students', { params: { search } })
+      .get<PaginatedResponse<'students', Student>>('/students', {
+        params: { search, page, limit },
+      })
       .then((r) => r.data),
   get: (id: number) =>
     api.get<{ student: Student }>(`/students/${id}`).then((r) => r.data.student),
@@ -48,9 +54,11 @@ export const studentService = {
 }
 
 export const teacherService = {
-  list: (search?: string) =>
+  list: (search?: string, page = 1, limit = 20) =>
     api
-      .get<{ teachers: Teacher[]; total: number }>('/teachers', { params: { search } })
+      .get<PaginatedResponse<'teachers', Teacher>>('/teachers', {
+        params: { search, page, limit },
+      })
       .then((r) => r.data),
   get: (id: number) =>
     api.get<{ teacher: Teacher }>(`/teachers/${id}`).then((r) => r.data.teacher),
@@ -62,9 +70,11 @@ export const teacherService = {
 }
 
 export const courseService = {
-  list: (search?: string, department?: string) =>
+  list: (search?: string, department?: string, page = 1, limit = 20) =>
     api
-      .get<{ courses: Course[]; total: number }>('/courses', { params: { search, department } })
+      .get<PaginatedResponse<'courses', Course>>('/courses', {
+        params: { search, department, page, limit },
+      })
       .then((r) => r.data),
   get: (id: number) =>
     api.get<{ course: Course }>(`/courses/${id}`).then((r) => r.data.course),
@@ -76,8 +86,10 @@ export const courseService = {
 }
 
 export const launchService = {
-  list: () =>
-    api.get<{ launches: Launch[]; total: number }>('/launches').then((r) => r.data),
+  list: (page = 1, limit = 20) =>
+    api
+      .get<PaginatedResponse<'launches', Launch>>('/launches', { params: { page, limit } })
+      .then((r) => r.data),
   get: (id: number) =>
     api.get<{ launch: Launch }>(`/launches/${id}`).then((r) => r.data.launch),
   create: (data: Partial<Launch>) =>
@@ -88,10 +100,18 @@ export const launchService = {
 }
 
 export const classService = {
-  list: (params?: { launchId?: number; courseId?: number; teacherId?: number }) =>
-    api.get<{ classes: Class[]; total: number }>('/classes', { params }).then((r) => r.data),
+  list: (
+    params?: { launchId?: number; courseId?: number; teacherId?: number },
+    page = 1,
+    limit = 20,
+  ) =>
+    api
+      .get<PaginatedResponse<'classes', Class>>('/classes', { params: { ...params, page, limit } })
+      .then((r) => r.data),
   get: (id: number) =>
-    api.get<{ class: Class; enrolledCount: number }>(`/classes/${id}`).then((r) => r.data),
+    api
+      .get<{ class: Class; enrolledCount: number }>(`/classes/${id}`)
+      .then((r) => r.data),
   create: (data: Partial<Class>) =>
     api.post<{ class: Class }>('/classes', data).then((r) => r.data.class),
   update: (id: number, data: Partial<Class>) =>
@@ -99,8 +119,15 @@ export const classService = {
   remove: (id: number) => api.delete(`/classes/${id}`).then((r) => r.data),
   enroll: (id: number, studentId: number) =>
     api.post(`/classes/${id}/enroll`, { studentId }).then((r) => r.data),
-  enrollments: (id: number) =>
+  enrollments: (id: number, page = 1, limit = 50) =>
     api
-      .get<{ enrollments: Enrollment[]; total: number }>(`/classes/${id}/enrollments`)
+      .get<PaginatedResponse<'enrollments', Enrollment>>(`/classes/${id}/enrollments`, {
+        params: { page, limit },
+      })
       .then((r) => r.data),
+  updateEnrollment: (eid: number, data: { score: number }) =>
+    api
+      .put<{ enrollment: Enrollment }>(`/enrollments/${eid}`, data)
+      .then((r) => r.data.enrollment),
+  dropEnrollment: (eid: number) => api.delete(`/enrollments/${eid}`).then((r) => r.data),
 }

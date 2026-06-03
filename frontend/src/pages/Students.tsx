@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { studentService } from '../services'
-import type { Student } from '../types'
+import { classService, studentService } from '../services'
+import type { Class, Student } from '../types'
+import { useAuth } from '../context/AuthContext'
 import FormModal from '../components/FormModal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import Pagination from '../components/Pagination'
 
 const empty = {
   email: '',
@@ -12,26 +14,40 @@ const empty = {
   address: '',
   major: '',
   year: 1,
-  gender: 'male',
+  gender: 'male' as string,
   guardianName: '',
   guardianPhone: '',
 }
 
 export default function Students() {
+  const { user: currentUser } = useAuth()
   const [items, setItems] = useState<Student[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Student | null>(null)
   const [form, setForm] = useState(empty)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [error, setError] = useState('')
 
-  const load = async (q = '') => {
+  const [enrollOpen, setEnrollOpen] = useState(false)
+  const [enrollStudentId, setEnrollStudentId] = useState<number | null>(null)
+  const [classes, setClasses] = useState<Class[]>([])
+  const [selectedClassId, setSelectedClassId] = useState(0)
+  const [enrolling, setEnrolling] = useState(false)
+
+  const isAdmin = currentUser?.role === 'admin'
+  const canManage = currentUser?.role === 'admin' || currentUser?.role === 'teacher'
+
+  const load = async (q = search, p = page) => {
     setLoading(true)
     try {
-      const data = await studentService.list(q)
+      const data = await studentService.list(q, p)
       setItems(data.students)
+      setTotal(data.total)
+      setPage(data.page)
     } catch {
       setItems([])
     }
@@ -40,9 +56,19 @@ export default function Students() {
 
   useEffect(() => {
     load()
-  }, [])
+    if (canManage) {
+      classService.list().then((d) => setClasses(d.classes)).catch(() => {})
+    }
+  }, [page])
+
+  const onSearch = (q: string) => {
+    setSearch(q)
+    setPage(1)
+    load(q, 1)
+  }
 
   const onCreate = () => {
+    if (!isAdmin) return
     setEditing(null)
     setForm(empty)
     setError('')
@@ -50,6 +76,7 @@ export default function Students() {
   }
 
   const onEdit = (s: Student) => {
+    if (!isAdmin) return
     setEditing(s)
     setForm({
       email: s.user?.email || '',
@@ -86,7 +113,7 @@ export default function Students() {
         await studentService.create({ ...form, year: Number(form.year) })
       }
       setOpen(false)
-      load(search)
+      load(search, page)
     } catch (err: unknown) {
       setError(
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
@@ -96,13 +123,36 @@ export default function Students() {
   }
 
   const onDelete = async () => {
-    if (!confirmId) return
+    if (!confirmId || !isAdmin) return
     try {
       await studentService.remove(confirmId)
       setConfirmId(null)
-      load(search)
+      load(search, page)
     } catch {
       setConfirmId(null)
+    }
+  }
+
+  const openEnroll = (studentId: number) => {
+    if (!canManage) return
+    setEnrollStudentId(studentId)
+    setSelectedClassId(0)
+    setEnrollOpen(true)
+  }
+
+  const doEnroll = async () => {
+    if (!enrollStudentId || !selectedClassId) return
+    setEnrolling(true)
+    try {
+      await classService.enroll(selectedClassId, enrollStudentId)
+      setEnrollOpen(false)
+      setEnrolling(false)
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'Enrollment failed'
+      alert(msg)
+      setEnrolling(false)
     }
   }
 
@@ -110,9 +160,11 @@ export default function Students() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Students</h1>
-        <button className="btn btn-primary" onClick={onCreate}>
-          + Add Student
-        </button>
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={onCreate}>
+            + Add Student
+          </button>
+        )}
       </div>
 
       <div className="card p-4 mb-4">
@@ -120,10 +172,7 @@ export default function Students() {
           className="input max-w-md"
           placeholder="Search by name, email, or code..."
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value)
-            load(e.target.value)
-          }}
+          onChange={(e) => onSearch(e.target.value)}
         />
       </div>
 
@@ -137,7 +186,7 @@ export default function Students() {
               <th>Major</th>
               <th>Year</th>
               <th>GPA</th>
-              <th></th>
+              {(isAdmin || canManage) && <th></th>}
             </tr>
           </thead>
           <tbody>
@@ -164,15 +213,30 @@ export default function Students() {
                   <td>{s.gpa?.toFixed(2) || '0.00'}</td>
                   <td>
                     <div className="flex gap-2">
-                      <button className="btn btn-secondary text-xs" onClick={() => onEdit(s)}>
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-danger text-xs"
-                        onClick={() => setConfirmId(s.id)}
-                      >
-                        Delete
-                      </button>
+                      {isAdmin && (
+                        <>
+                          <button
+                            className="btn btn-secondary text-xs"
+                            onClick={() => onEdit(s)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn-danger text-xs"
+                            onClick={() => setConfirmId(s.id)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                      {canManage && (
+                        <button
+                          className="btn btn-secondary text-xs"
+                          onClick={() => openEnroll(s.id)}
+                        >
+                          Enroll
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -180,6 +244,7 @@ export default function Students() {
             )}
           </tbody>
         </table>
+        <Pagination page={page} limit={20} total={total} onPageChange={setPage} />
       </div>
 
       <FormModal
@@ -298,6 +363,39 @@ export default function Students() {
         onClose={() => setConfirmId(null)}
         onConfirm={onDelete}
       />
+
+      {canManage && (
+        <FormModal
+          open={enrollOpen}
+          title="Enroll Student in Class"
+          onClose={() => setEnrollOpen(false)}
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault()
+            doEnroll()
+          }}
+          submitLabel="Enroll"
+          loading={enrolling}
+        >
+          <div>
+            <label className="label">Select class</label>
+            <select
+              className="input"
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(Number(e.target.value))}
+              required
+            >
+              <option value={0}>-- Choose a class --</option>
+              {classes
+                .filter((c) => c.status === 'open')
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.code} - {c.name} ({c.course?.name})
+                  </option>
+                ))}
+            </select>
+          </div>
+        </FormModal>
+      )}
     </div>
   )
 }
