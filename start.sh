@@ -28,6 +28,12 @@ sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'" 
   sudo -u postgres psql -c "CREATE ROLE ${DB_USER} LOGIN SUPERUSER PASSWORD '${DB_PASSWORD}';"
 
 echo "==> Database is ready at localhost:5432"
+echo "==> Checking port 8080..."
+if fuser 8080/tcp >/dev/null 2>&1; then
+  echo "    Port 8080 in use, stopping previous process..."
+  fuser -k 8080/tcp 2>/dev/null
+  sleep 1
+fi
 echo "==> Starting Go backend..."
 cd "$(dirname "$0")/backend"
 cp -n .env.example .env 2>/dev/null || true
