@@ -37,7 +37,8 @@ db-create:
 		echo "    Database already exists." || \
 		(sudo -u postgres createdb "$(DB_NAME)" && echo "    Done.")
 	@sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '$(DB_USER)'" | grep -q 1 && \
-		echo "    Role $(DB_USER) already exists." || \
+		sudo -u postgres psql -c "ALTER USER $(DB_USER) WITH PASSWORD '$(DB_PASSWORD)';" && \
+		echo "    Password set for $(DB_USER)." || \
 		(sudo -u postgres psql -c "CREATE ROLE $(DB_USER) LOGIN SUPERUSER PASSWORD '$(DB_PASSWORD)';" && \
 		 echo "    Role $(DB_USER) created.")
 

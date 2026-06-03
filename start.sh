@@ -22,8 +22,9 @@ echo "==> Creating database '${DB_NAME}' if it does not exist..."
 sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'" | grep -q 1 || \
   sudo -u postgres createdb "${DB_NAME}"
 
-echo "==> Ensuring '${DB_USER}' role exists with password..."
-sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'" | grep -q 1 || \
+echo "==> Setting password for '${DB_USER}' role..."
+sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'" | grep -q 1 && \
+  sudo -u postgres psql -c "ALTER USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" || \
   sudo -u postgres psql -c "CREATE ROLE ${DB_USER} LOGIN SUPERUSER PASSWORD '${DB_PASSWORD}';"
 
 echo "==> Database is ready at localhost:5432"
