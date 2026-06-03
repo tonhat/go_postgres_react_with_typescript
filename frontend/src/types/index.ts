@@ -130,6 +130,50 @@ export interface Attendance {
   updatedAt: string
 }
 
+export interface GradeRule {
+  id: number
+  minScore: number
+  maxScore: number
+  letterGrade: string
+  gpaPoints: number
+  launchId?: number | null
+  launch?: Launch | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Transcript {
+  id: number
+  studentId: number
+  student?: Student
+  launchId: number
+  launch?: Launch
+  gpa: number
+  totalCredits: number
+  totalPoints: number
+  courseCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ClassReport {
+  classId: number
+  className: string
+  avgScore: number
+  minScore: number
+  maxScore: number
+  passCount: number
+  failCount: number
+  totalCount: number
+  passRate: number
+}
+
+export interface TranscriptSummary {
+  launches: number
+  transcripts: number
+  overallGpa: number
+}
+
 export interface AttendanceSummaryItem {
   studentId: number
   studentCode: string

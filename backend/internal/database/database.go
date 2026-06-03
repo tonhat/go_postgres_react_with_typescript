@@ -54,6 +54,8 @@ func Migrate() error {
 		&models.Class{},
 		&models.Enrollment{},
 		&models.Attendance{},
+		&models.GradeRule{},
+		&models.Transcript{},
 	)
 }
 
@@ -91,6 +93,18 @@ func Seed() error {
 	}
 	if err := DB.Create(&launch).Error; err != nil {
 		return err
+	}
+
+	seededRules := []models.GradeRule{
+		{MinScore: 90, MaxScore: 100, LetterGrade: "A", GPAPoints: 4.0},
+		{MinScore: 80, MaxScore: 89.99, LetterGrade: "B", GPAPoints: 3.0},
+		{MinScore: 70, MaxScore: 79.99, LetterGrade: "C", GPAPoints: 2.0},
+		{MinScore: 60, MaxScore: 69.99, LetterGrade: "D", GPAPoints: 1.0},
+		{MinScore: 0, MaxScore: 59.99, LetterGrade: "F", GPAPoints: 0.0},
+	}
+	for _, rule := range seededRules {
+		DB.Where("letter_grade = ? AND launch_id IS NULL", rule.LetterGrade).
+			FirstOrCreate(&rule)
 	}
 
 	log.Println("Seed data created successfully")

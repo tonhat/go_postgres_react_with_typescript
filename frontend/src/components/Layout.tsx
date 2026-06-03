@@ -9,6 +9,8 @@ const navItems = [
   { to: '/courses', label: 'Courses', icon: '📚' },
   { to: '/classes', label: 'Classes', icon: '🏫' },
   { to: '/launches', label: 'Launches', icon: '🚀' },
+  { to: '/grade-rules', label: 'Grade Rules', icon: '📋' },
+  { to: '/transcripts', label: 'Transcripts', icon: '📜' },
 ]
 
 export default function Layout() {

@@ -111,6 +111,32 @@ type Enrollment struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+type GradeRule struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	MinScore    float64   `gorm:"type:decimal(5,2);not null" json:"minScore"`
+	MaxScore    float64   `gorm:"type:decimal(5,2);not null" json:"maxScore"`
+	LetterGrade string    `gorm:"size:8;not null" json:"letterGrade"`
+	GPAPoints   float64   `gorm:"type:decimal(3,2);not null" json:"gpaPoints"`
+	LaunchID    *uint     `json:"launchId"`
+	Launch      *Launch   `gorm:"foreignKey:LaunchID" json:"launch"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+type Transcript struct {
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	StudentID    uint      `gorm:"not null;uniqueIndex:idx_transcript_student_launch" json:"studentId"`
+	Student      Student   `gorm:"foreignKey:StudentID" json:"student"`
+	LaunchID     uint      `gorm:"not null;uniqueIndex:idx_transcript_student_launch" json:"launchId"`
+	Launch       Launch    `gorm:"foreignKey:LaunchID" json:"launch"`
+	GPA          float64   `gorm:"type:decimal(4,2);default:0" json:"gpa"`
+	TotalCredits int       `gorm:"default:0" json:"totalCredits"`
+	TotalPoints  float64   `gorm:"type:decimal(6,2);default:0" json:"totalPoints"`
+	CourseCount  int       `gorm:"default:0" json:"courseCount"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
 type Attendance struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	StudentID uint      `gorm:"not null;index:idx_attendance_student_class_date" json:"studentId"`

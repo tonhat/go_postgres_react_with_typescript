@@ -1,5 +1,5 @@
 import api from './api'
-import type { Attendance, AttendanceSummaryItem, } from '../types'
+import type { Attendance, AttendanceSummaryItem, GradeRule, Transcript, ClassReport, TranscriptSummary } from '../types'
 import type {
   AuthResponse,
   Class,
@@ -118,6 +118,43 @@ export const attendanceService = {
     api
       .get<{ summary: AttendanceSummaryItem[]; total: number }>(`/classes/${classId}/attendance/summary`)
       .then((r) => r.data),
+}
+
+export const gradeRuleService = {
+  list: (page = 1, limit = 20, launchId?: number) =>
+    api
+      .get<PaginatedResponse<'gradeRules', GradeRule>>('/grade-rules', {
+        params: { page, limit, launchId },
+      })
+      .then((r) => r.data),
+  get: (id: number) =>
+    api.get<{ gradeRule: GradeRule }>(`/grade-rules/${id}`).then((r) => r.data.gradeRule),
+  create: (data: Partial<GradeRule>) =>
+    api.post<{ gradeRule: GradeRule }>('/grade-rules', data).then((r) => r.data.gradeRule),
+  update: (id: number, data: Partial<GradeRule>) =>
+    api.put<{ gradeRule: GradeRule }>(`/grade-rules/${id}`, data).then((r) => r.data.gradeRule),
+  remove: (id: number) => api.delete(`/grade-rules/${id}`).then((r) => r.data),
+}
+
+export const transcriptService = {
+  list: (params?: { studentId?: number; launchId?: number }, page = 1, limit = 20) =>
+    api
+      .get<PaginatedResponse<'transcripts', Transcript>>('/transcripts', {
+        params: { ...params, page, limit },
+      })
+      .then((r) => r.data),
+  get: (id: number) =>
+    api.get<{ transcript: Transcript }>(`/transcripts/${id}`).then((r) => r.data.transcript),
+  studentTranscripts: (studentId: number) =>
+    api.get<{ transcripts: Transcript[] }>(`/students/${studentId}/transcripts`).then((r) => r.data),
+  finalize: (launchId: number) =>
+    api.post<{ message: string; transcripts: number; students: number; avgGpa: number }>(
+      `/launches/${launchId}/finalize`,
+    ).then((r) => r.data),
+  report: (launchId: number) =>
+    api.get<{ report: ClassReport[] }>(`/launches/${launchId}/report`).then((r) => r.data),
+  summary: () =>
+    api.get<{ summary: TranscriptSummary }>('/transcripts/summary').then((r) => r.data),
 }
 
 export const classService = {

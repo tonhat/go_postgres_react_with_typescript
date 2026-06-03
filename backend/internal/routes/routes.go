@@ -26,6 +26,8 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 	classHandler := handlers.NewClassHandler()
 	launchHandler := handlers.NewLaunchHandler()
 	attendanceHandler := handlers.NewAttendanceHandler()
+	gradeRuleHandler := handlers.NewGradeRuleHandler()
+	transcriptHandler := handlers.NewTranscriptHandler()
 
 	api := r.Group("/api")
 
@@ -65,6 +67,15 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 
 			readAll.GET("/classes/:id/attendance", attendanceHandler.List)
 			readAll.GET("/classes/:id/attendance/summary", attendanceHandler.Summary)
+
+			readAll.GET("/grade-rules", gradeRuleHandler.List)
+			readAll.GET("/grade-rules/:id", gradeRuleHandler.Get)
+
+			readAll.GET("/transcripts", transcriptHandler.List)
+			readAll.GET("/transcripts/:id", transcriptHandler.Get)
+			readAll.GET("/students/:id/transcripts", transcriptHandler.StudentTranscripts)
+			readAll.GET("/launches/:id/report", transcriptHandler.Report)
+			readAll.GET("/transcripts/summary", transcriptHandler.Summary)
 		}
 
 		adminWrite := protected.Group("")
@@ -92,6 +103,12 @@ func SetupRoutes(cfg *config.Config, r *gin.Engine) *gin.Engine {
 			adminWrite.POST("/launches", launchHandler.Create)
 			adminWrite.PUT("/launches/:id", launchHandler.Update)
 			adminWrite.DELETE("/launches/:id", launchHandler.Delete)
+
+			adminWrite.POST("/grade-rules", gradeRuleHandler.Create)
+			adminWrite.PUT("/grade-rules/:id", gradeRuleHandler.Update)
+			adminWrite.DELETE("/grade-rules/:id", gradeRuleHandler.Delete)
+
+			adminWrite.POST("/launches/:id/finalize", transcriptHandler.Finalize)
 		}
 
 		teacherOps := protected.Group("")
