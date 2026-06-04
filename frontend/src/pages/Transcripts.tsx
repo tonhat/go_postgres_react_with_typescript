@@ -45,12 +45,12 @@ export default function Transcripts() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Transcripts</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Transcripts</h1>
       </div>
 
       {summary && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
           <div className="card text-center p-4">
             <div className="text-2xl font-bold text-indigo-600">{summary.launches}</div>
             <div className="text-sm text-gray-500">Launches Processed</div>
@@ -69,10 +69,10 @@ export default function Transcripts() {
       )}
 
       <div className="card overflow-x-auto">
-        <div className="mb-4 flex gap-2 items-center">
+        <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:items-center">
           <label className="text-sm font-medium text-gray-600">Filter by launch:</label>
           <select
-            className="input w-64"
+            className="input w-full sm:w-64"
             value={launchFilter}
             onChange={(e) => { setLaunchFilter(e.target.value); setPage(1) }}
           >

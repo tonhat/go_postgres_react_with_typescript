@@ -57,9 +57,9 @@ export default function Dashboard() {
       {loading ? (
         <div className="text-gray-500">Loading statistics...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {cards.map((c) => (
-            <div key={c.label} className="card p-6 flex items-center gap-4">
+            <div key={c.label} className="card p-4 md:p-6 flex items-center gap-4">
               <div className={`${c.color} w-12 h-12 rounded-md flex items-center justify-center text-white text-xl`}>
                 {c.icon}
               </div>
@@ -72,7 +72,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="mt-8 card p-6">
+      <div className="mt-6 md:mt-8 card p-4 md:p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-2">Welcome to EduManager</h2>
         <p className="text-sm text-gray-600">
           A complete education management system. Manage students, teachers, courses, classes, and academic launches.

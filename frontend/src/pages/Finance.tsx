@@ -29,7 +29,7 @@ export default function Finance() {
     })
   }, [launches])
 
-  if (loading && !summary) return <div className="p-8 text-center text-gray-500">Loading...</div>
+  if (loading && !summary) return <div className="p-4 md:p-8 text-center text-gray-500">Loading...</div>
 
   return (
     <div>
@@ -37,26 +37,26 @@ export default function Finance() {
 
       {summary && (
         <>
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="card text-center p-4">
-              <div className="text-3xl font-bold text-indigo-600">{summary.totalInvoices}</div>
-              <div className="text-sm text-gray-500">Total Invoices</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+            <div className="card text-center p-3 md:p-4">
+              <div className="text-2xl md:text-3xl font-bold text-indigo-600">{summary.totalInvoices}</div>
+              <div className="text-xs md:text-sm text-gray-500">Total Invoices</div>
             </div>
-            <div className="card text-center p-4">
-              <div className="text-3xl font-bold text-blue-600">${summary.totalAmount.toFixed(2)}</div>
-              <div className="text-sm text-gray-500">Total Billed</div>
+            <div className="card text-center p-3 md:p-4">
+              <div className="text-2xl md:text-3xl font-bold text-blue-600">${summary.totalAmount.toFixed(2)}</div>
+              <div className="text-xs md:text-sm text-gray-500">Total Billed</div>
             </div>
-            <div className="card text-center p-4">
-              <div className="text-3xl font-bold text-green-600">${summary.totalCollected.toFixed(2)}</div>
-              <div className="text-sm text-gray-500">Collected</div>
+            <div className="card text-center p-3 md:p-4">
+              <div className="text-2xl md:text-3xl font-bold text-green-600">${summary.totalCollected.toFixed(2)}</div>
+              <div className="text-xs md:text-sm text-gray-500">Collected</div>
             </div>
-            <div className="card text-center p-4">
-              <div className="text-3xl font-bold text-red-600">${summary.totalOutstanding.toFixed(2)}</div>
-              <div className="text-sm text-gray-500">Outstanding</div>
+            <div className="card text-center p-3 md:p-4">
+              <div className="text-2xl md:text-3xl font-bold text-red-600">${summary.totalOutstanding.toFixed(2)}</div>
+              <div className="text-xs md:text-sm text-gray-500">Outstanding</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
             <div className="card p-4 flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <div>

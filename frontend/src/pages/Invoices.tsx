@@ -88,21 +88,21 @@ export default function Invoices() {
       </div>
 
       {summary && (
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="card text-center p-4">
-            <div className="text-2xl font-bold text-indigo-600">{summary.totalInvoices}</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+          <div className="card text-center p-3 md:p-4">
+            <div className="text-xl md:text-2xl font-bold text-indigo-600">{summary.totalInvoices}</div>
             <div className="text-xs text-gray-500">Total Invoices</div>
           </div>
-          <div className="card text-center p-4">
-            <div className="text-2xl font-bold text-blue-600">${summary.totalAmount.toFixed(2)}</div>
+          <div className="card text-center p-3 md:p-4">
+            <div className="text-xl md:text-2xl font-bold text-blue-600">${summary.totalAmount.toFixed(2)}</div>
             <div className="text-xs text-gray-500">Total Billed</div>
           </div>
-          <div className="card text-center p-4">
-            <div className="text-2xl font-bold text-green-600">${summary.totalCollected.toFixed(2)}</div>
+          <div className="card text-center p-3 md:p-4">
+            <div className="text-xl md:text-2xl font-bold text-green-600">${summary.totalCollected.toFixed(2)}</div>
             <div className="text-xs text-gray-500">Collected</div>
           </div>
-          <div className="card text-center p-4">
-            <div className="text-2xl font-bold text-red-600">${summary.totalOutstanding.toFixed(2)}</div>
+          <div className="card text-center p-3 md:p-4">
+            <div className="text-xl md:text-2xl font-bold text-red-600">${summary.totalOutstanding.toFixed(2)}</div>
             <div className="text-xs text-gray-500">Outstanding</div>
           </div>
         </div>
@@ -111,12 +111,12 @@ export default function Invoices() {
       <div className="card overflow-x-auto">
         <div className="mb-4 flex gap-2 items-center flex-wrap">
           <label className="text-sm font-medium text-gray-600">Launch:</label>
-          <select className="input w-48" value={launchFilter} onChange={(e) => { setLaunchFilter(e.target.value); setPage(1) }}>
+          <select className="input w-full sm:w-48" value={launchFilter} onChange={(e) => { setLaunchFilter(e.target.value); setPage(1) }}>
             <option value="">All</option>
             {launches.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
-          <label className="text-sm font-medium text-gray-600 ml-2">Status:</label>
-          <select className="input w-36" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}>
+          <label className="text-sm font-medium text-gray-600">Status:</label>
+          <select className="input w-full sm:w-36" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}>
             <option value="">All</option>
             <option value="unpaid">Unpaid</option>
             <option value="partial">Partial</option>
@@ -213,7 +213,7 @@ export default function Invoices() {
               <div className="border-t pt-4">
                 <h3 className="font-medium mb-2">Record Payment</h3>
                 {payError && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2 mb-2">{payError}</div>}
-                <div className="grid grid-cols-3 gap-2 mb-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                   <div>
                     <label className="label text-xs">Amount</label>
                     <input type="number" step="0.01" className="input" max={remaining} value={payAmount} onChange={(e) => setPayAmount(parseFloat(e.target.value) || 0)} />

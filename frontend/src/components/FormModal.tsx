@@ -21,11 +21,11 @@ export default function FormModal({
 }: FormModalProps) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="card w-full max-w-lg max-h-[90vh] overflow-auto">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50">
+      <div className="card w-full sm:max-w-lg sm:max-h-[90vh] sm:overflow-auto sm:rounded-xl rounded-t-xl sm:rounded-b-xl max-h-[95vh] overflow-auto">
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
           <h3 className="font-semibold text-gray-800">{title}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg p-1">
             ✕
           </button>
         </div>

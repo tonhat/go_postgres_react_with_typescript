@@ -163,8 +163,8 @@ export default function Launches() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Launches (Semesters)</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Launches (Semesters)</h1>
         {isAdmin && (
           <button className="btn btn-primary" onClick={onCreate}>
             + Add Launch
@@ -212,7 +212,7 @@ export default function Launches() {
                     )}
                   </td>
                   <td>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-1">
                       <button className="btn btn-secondary text-xs" onClick={() => onViewReport(l.id, l.name)}>
                         Report
                       </button>
@@ -264,7 +264,7 @@ export default function Launches() {
             {error}
           </div>
         )}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="label">Code</label>
             <input

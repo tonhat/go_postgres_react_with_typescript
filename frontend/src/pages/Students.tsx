@@ -158,8 +158,8 @@ export default function Students() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Students</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Students</h1>
         {isAdmin && (
           <button className="btn btn-primary" onClick={onCreate}>
             + Add Student
@@ -167,9 +167,9 @@ export default function Students() {
         )}
       </div>
 
-      <div className="card p-4 mb-4">
+      <div className="card p-3 md:p-4 mb-4">
         <input
-          className="input max-w-md"
+          className="input w-full md:max-w-md"
           placeholder="Search by name, email, or code..."
           value={search}
           onChange={(e) => onSearch(e.target.value)}
@@ -258,7 +258,7 @@ export default function Students() {
             {error}
           </div>
         )}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="label">Full name</label>
             <input

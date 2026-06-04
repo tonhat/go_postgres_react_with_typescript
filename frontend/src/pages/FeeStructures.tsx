@@ -94,8 +94,8 @@ export default function FeeStructures() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Fee Structures</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Fee Structures</h1>
         {isAdmin && (
           <button className="btn btn-primary" onClick={onCreate}>+ Add Fee</button>
         )}
@@ -142,8 +142,8 @@ export default function FeeStructures() {
 
       <FormModal open={open} title={editing ? 'Edit Fee' : 'Add Fee'} onClose={() => setOpen(false)} onSubmit={onSubmit}>
         {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2 mb-3">{error}</div>}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="col-span-1 md:col-span-2">
             <label className="label">Name</label>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="e.g. Tuition, Lab Fee" />
           </div>

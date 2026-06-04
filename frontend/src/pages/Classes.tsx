@@ -112,8 +112,8 @@ export default function Classes() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Classes</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Classes</h1>
         {isAdmin && <button className="btn btn-primary" onClick={onCreate}>+ Add Class</button>}
       </div>
 
@@ -149,15 +149,15 @@ export default function Classes() {
 
       {selectedClass && (
         <div className="card">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <div className="flex gap-4">
-              <h2 className="font-semibold text-gray-800">{selectedClass.code}: {selectedClass.name}</h2>
+          <div className="px-4 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <h2 className="font-semibold text-gray-800 truncate">{selectedClass.code}: {selectedClass.name}</h2>
               <div className="flex gap-1">
                 <button className={`text-xs px-3 py-1 rounded ${tab === 'enrollments' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100'}`} onClick={() => selectClass(selectedClass, 'enrollments')}>Grades</button>
                 <button className={`text-xs px-3 py-1 rounded ${tab === 'attendance' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100'}`} onClick={() => selectClass(selectedClass, 'attendance')}>Attendance</button>
               </div>
             </div>
-            <button className="btn btn-secondary text-xs" onClick={() => setSelectedClass(null)}>Close</button>
+            <button className="btn btn-secondary text-xs self-end sm:self-auto" onClick={() => setSelectedClass(null)}>Close</button>
           </div>
 
           {tab === 'enrollments' && (
@@ -193,9 +193,9 @@ export default function Classes() {
 
           {tab === 'attendance' && (
             <div className="p-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <label className="label mb-0">Date</label>
-                <input type="date" className="input w-auto" value={attDate}
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Date</label>
+                <input type="date" className="input w-auto text-sm" value={attDate}
                   onChange={(e) => { setAttDate(e.target.value); if (selectedClass) loadAttendance(selectedClass) }} />
                 <button className="btn btn-secondary text-xs" onClick={() => { if (selectedClass) loadAttendance(selectedClass) }}>Load</button>
                 <button className="btn btn-secondary text-xs" onClick={() => setAttRecords((prev) => prev.map((r) => ({ ...r, status: 'present' })))}>All Present</button>
@@ -258,7 +258,7 @@ export default function Classes() {
 
       <FormModal open={open} title={editing ? 'Edit Class' : 'Add Class'} onClose={() => setOpen(false)} onSubmit={onSubmit}>
         {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2">{error}</div>}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div><label className="label">Code</label><input className="input" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required /></div>
           <div><label className="label">Name</label><input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
           <div><label className="label">Course</label>

@@ -52,6 +52,14 @@ body {
 .badge {
   @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
 }
+@media (max-width: 640px) {
+  .table th, .table td {
+    @apply px-2 py-2;
+  }
+  .table {
+    @apply text-xs;
+  }
+}
 .badge-green {
   @apply bg-green-100 text-green-800;
 }
